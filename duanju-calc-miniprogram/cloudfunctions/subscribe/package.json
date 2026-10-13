@@ -1,0 +1,9 @@
+{
+  "name": "subscribe",
+  "version": "1.0.0",
+  "description": "政策更新订阅记录（一次性订阅，remaining 为可推送次数）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~0.6.1"
+  }
+}

@@ -1,0 +1,80 @@
+<view class="page">
+
+  <!-- 头部 -->
+  <view class="pro-hero">
+    <view class="crown">{{pro ? '🎉' : '👑'}}</view>
+    <view class="ptitle">{{pro ? '专业版使用中' : '短剧分账专业版'}}</view>
+    <view class="psub">{{pro ? '感谢支持 · 数据每周更新' : '精确激励模型 · 政策变动提醒 · 方案导出'}}</view>
+  </view>
+
+  <!-- 购买区 / 已开通状态 -->
+  <view wx:if="{{pro}}" class="pro-active">
+    <view class="pa-emoji">✅</view>
+    <view class="pa-title">专业版已开通</view>
+    <view class="pa-sub">阶梯激励精确模型 · 方案保存导出 · 政策变动提醒 已解锁</view>
+    <button class="btn-ghost" bindtap="onCancelTap">模拟取消订阅</button>
+  </view>
+
+  <view wx:else>
+    <view class="price-cards">
+      <view class="price-card {{plan === 'month' ? 'on' : ''}}" data-plan="month" bindtap="onPlanTap">
+        <view class="pp">¥9.9<text class="pd-unit">/月</text></view>
+        <view class="pd">月卡 · 30 天</view>
+        <view class="psave">到期自动失效</view>
+      </view>
+      <view class="price-card {{plan === 'year' ? 'on' : ''}}" data-plan="year" bindtap="onPlanTap">
+        <view class="pvip">省 ¥19.8</view>
+        <view class="pp">¥99<text class="pd-unit">/年</text></view>
+        <view class="pd">年卡 · 365 天</view>
+        <view class="psave">推荐 · 日均不到 3 毛钱</view>
+      </view>
+    </view>
+    <button class="btn-primary" bindtap="onBuyTap">立即开通专业版</button>
+    <view class="note" style="text-align:center;margin-top:12rpx">虚拟商品 · 180 天内退款退手续费 · 演示环境为模拟支付</view>
+  </view>
+
+  <!-- 权益对比 -->
+  <view class="card" style="margin-top:28rpx">
+    <view class="card-title">免费版 vs 专业版</view>
+    <view class="feat-table">
+      <view class="feat-row feat-head">
+        <text class="fname">功能</text><text class="ffree">免费版</text><text class="fpro">专业版</text>
+      </view>
+      <view class="feat-row" wx:for="{{features}}" wx:key="name">
+        <text class="fname">{{item.name}}</text>
+        <text class="ffree {{item.free ? 'yes' : 'no'}}">{{item.free ? '✓' : '—'}}</text>
+        <text class="fpro yes">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已保存方案 -->
+  <view class="card" wx:if="{{saved.length > 0}}">
+    <view class="card-title">
+      📌 已保存方案
+      <text class="sub" bindtap="onClearSaved" style="margin-left:auto;color:#8A8F99">清空</text>
+    </view>
+    <view class="saved-item" wx:for="{{saved}}" wx:key="id">
+      <view class="sleft">
+        <view class="sname">{{item.name}}</view>
+        <view class="smeta">{{item.meta}}</view>
+      </view>
+      <view class="sprofit" style="color:{{item.profitColor}}">{{item.profitText}}</view>
+    </view>
+  </view>
+
+  <!-- FAQ 与声明 -->
+  <view class="card">
+    <view class="card-title">常见问题</view>
+    <view class="faq-item"><b>Q：政策数据多久更新？</b>平台政策变动后 48 小时内更新，每周一固定发版，重大激励活动当日跟进。</view>
+    <view class="faq-item"><b>Q：计算准吗？</b>单价与分成比例来自平台公开规则与行业估算，可在专业版中按你的实际合同自定义。</view>
+    <view class="faq-item"><b>Q：支持开发票吗？</b>年卡用户支持开具电子发票，联系客服即可。</view>
+    <view class="faq-item"><b>Q：iOS 购买怎么结算？</b>iOS 端经微信 Apple 支付通道购买（佣金 12%，约 45-60 天结算）；Android 端费率 1%、T+3 到账。两端均可直接在小程序内购买。</view>
+    <view class="faq-item"><b>Q：月卡会自动续费吗？</b>当前为一次性购买（月卡 30 天 / 年卡 365 天），到期自动失效，不自动扣款。</view>
+  </view>
+
+  <view class="note" style="text-align:center;padding:8rpx 40rpx 40rpx">
+    数据版本 {{version}}<br>免责声明：所有政策均为公开信息整理，分成比例与单价为行业估算参考值，实际以各平台当期官方规则与签约合同为准，不构成投资建议。
+  </view>
+
+</view>

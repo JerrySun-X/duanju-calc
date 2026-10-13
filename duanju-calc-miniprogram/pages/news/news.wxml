@@ -1,0 +1,36 @@
+<view class="page">
+
+  <!-- 订阅提醒横幅 -->
+  <view class="banner-pro" bindtap="onSubscribeTap">
+    <text class="bicon">🔔</text>
+    <view class="bbody">
+      <view class="btitle">开启政策变动提醒</view>
+      <view class="bsub">平台分账规则更新时，微信服务消息第一时间推送</view>
+    </view>
+    <text class="bmore">{{pro ? '已开启 ›' : '专业版 ›'}}</text>
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view scroll-x class="chips" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view class="chip {{cat === item ? 'on' : ''}}" wx:for="{{cats}}" wx:key="*this" data-cat="{{item}}" bindtap="onCatTap">{{item}}</view>
+  </scroll-view>
+
+  <!-- 政策列表 -->
+  <view class="news-item" wx:for="{{list}}" wx:key="id">
+    <view class="nhead">
+      <text class="nplat">{{item.plat}}</text>
+      <text class="impact {{item.impactCls}}">{{item.impact}}</text>
+      <text class="ndate">{{item.date}}</text>
+    </view>
+    <view class="ntitle">{{item.title}}</view>
+    <view class="nsum">{{item.sum}}</view>
+    <view class="nfoot">来源：{{item.src}}</view>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0}}">该分类下暂无政策动态</view>
+
+  <view class="note" style="text-align:center;padding:24rpx 0 40rpx">
+    数据版本 {{version}} · 每周一更新<br>信息来源为各平台官方公告与权威媒体报道，政策以平台当期官方规则为准
+  </view>
+
+</view>

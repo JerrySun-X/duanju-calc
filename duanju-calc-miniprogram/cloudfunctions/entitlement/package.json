@@ -1,0 +1,9 @@
+{
+  "name": "entitlement",
+  "version": "1.0.0",
+  "description": "专业版权益：查询与开通记录（云端持久化，防本地篡改/卸载丢失）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~0.6.1"
+  }
+}

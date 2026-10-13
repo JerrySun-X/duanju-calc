@@ -1,0 +1,27 @@
+{
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "projectname": "duanju-calc",
+  "description": "短剧分账计算器 + 平台政策情报站",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": false,
+    "es7": true,
+    "ignoreUploadUnusedFiles": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "libVersion": "3.8.12",
+  "condition": {}
+}

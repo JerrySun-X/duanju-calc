@@ -1,0 +1,9 @@
+{
+  "name": "getPolicies",
+  "version": "1.0.0",
+  "description": "获取平台政策列表（政策情报站数据源）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~0.6.1"
+  }
+}

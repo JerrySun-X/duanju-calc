@@ -1,0 +1,37 @@
+{
+  "pages": [
+    "pages/calculator/calculator",
+    "pages/news/news",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationBarTitleText": "短剧分账计算器",
+    "navigationBarBackgroundColor": "#F6F7F9",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6F7F9",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8A8F99",
+    "selectedColor": "#07C160",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/calculator/calculator",
+        "text": "计算器"
+      },
+      {
+        "pagePath": "pages/news/news",
+        "text": "政策情报"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "会员"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

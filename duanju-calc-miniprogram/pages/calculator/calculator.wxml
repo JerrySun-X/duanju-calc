@@ -1,0 +1,161 @@
+<view class="page">
+
+  <!-- 平台选择 -->
+  <scroll-view scroll-x class="chips" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view class="chip {{platformId === p.id ? 'on' : ''}}" wx:for="{{platforms}}" wx:key="id" data-id="{{p.id}}" bindtap="onPlatformTap">{{p.name}}</view>
+  </scroll-view>
+
+  <!-- 平台信息 -->
+  <view class="card">
+    <view class="card-title">🎬 {{platform.name}}<text class="sub">· {{platform.modeLabel}}</text></view>
+    <view class="note" style="margin-bottom:8rpx">{{platform.summary}}</view>
+    <view class="note">💡 {{platform.priceNote}}</view>
+  </view>
+
+  <!-- 播放假设 -->
+  <view class="card">
+    <view class="card-title">📈 播放假设</view>
+    <view class="slider-row"><label>总播放量</label><view class="val">{{views}}<em>万次</em></view></view>
+    <slider min="10" max="10000" step="10" value="{{views}}" activeColor="#07C160" backgroundColor="#E3E6EA" block-size="22" bindchanging="onViewsChanging" bindchange="onViewsChanging"/>
+
+    <view class="slider-row" style="margin-top:16rpx"><label>有效播放率</label><view class="val">{{validRate}}%</view></view>
+    <slider min="30" max="100" step="1" value="{{validRate}}" activeColor="#07C160" backgroundColor="#E3E6EA" block-size="22" bindchanging="onValidChanging" bindchange="onValidChanging"/>
+    <view class="note">有效播放率 = 产生广告曝光/付费的有效观看占比，行业常见 60%-80%</view>
+
+    <block wx:if="{{isIAP}}">
+      <view class="slider-row" style="margin-top:16rpx"><label>付费率</label><view class="val">{{payRate}}%</view></view>
+      <slider min="{{platform.payRateRange[0]}}" max="{{platform.payRateRange[1]}}" step="0.5" value="{{payRate}}" activeColor="#07C160" backgroundColor="#E3E6EA" block-size="22" bindchanging="onPayRateChanging" bindchange="onPayRateChanging"/>
+      <view class="slider-row" style="margin-top:16rpx"><label>客单价</label><view class="val">{{arpu}}<em>元</em></view></view>
+      <slider min="{{platform.arpuRange[0]}}" max="{{platform.arpuRange[1]}}" step="1" value="{{arpu}}" activeColor="#07C160" backgroundColor="#E3E6EA" block-size="22" bindchanging="onArpuChanging" bindchange="onArpuChanging"/>
+      <view class="note">平台流水 = 有效播放 × 付费率 × 客单价</view>
+    </block>
+
+    <block wx:else>
+      <view class="slider-row" style="margin-top:16rpx"><label>单价（元/千次有效播放）</label><view class="val">{{price}}</view></view>
+      <slider min="{{priceRange.min}}" max="{{priceRange.max}}" step="{{priceRange.step}}" value="{{price}}" activeColor="#07C160" backgroundColor="#E3E6EA" block-size="22" bindchanging="onPriceChanging" bindchange="onPriceChanging"/>
+      <view class="note">💡 {{platform.priceNote}}</view>
+    </block>
+  </view>
+
+  <!-- 分成与激励 -->
+  <view class="card">
+    <view class="card-title">🤝 分成与激励</view>
+
+    <view class="radio-row" wx:if="{{platform.shareModes}}">
+      <view class="radio-pill {{shareMode === m.id ? 'on' : ''}}" wx:for="{{platform.shareModes}}" wx:for-item="m" wx:key="id" data-id="{{m.id}}" bindtap="onShareModeTap">
+        <b>{{m.label}}</b><span>{{m.share}}%</span>
+      </view>
+    </view>
+
+    <view class="slider-row"><label>分成比例</label><view class="val">{{share}}%</view></view>
+    <slider min="{{shareRange.min}}" max="{{shareRange.max}}" step="{{shareRange.step}}" value="{{share}}" activeColor="#07C160" backgroundColor="#E3E6EA" block-size="22" bindchanging="onShareChanging" bindchange="onShareChanging"/>
+    <view class="note">💡 {{platform.shareNote}}</view>
+
+    <view wx:if="{{platform.toggles.length > 0}}" style="margin-top:16rpx">
+      <view class="switch-row" wx:for="{{platform.toggles}}" wx:for-item="t" wx:key="id">
+        <view class="sinfo">
+          <b>{{t.label}}<text wx:if="{{!pro}}" class="pro-tag">专业版</text></b>
+          <span>{{t.desc}}</span>
+        </view>
+        <view class="sw {{toggles[t.id] ? 'on' : ''}} {{!pro ? 'locked' : ''}}" data-id="{{t.id}}" bindtap="onToggleTap"></view>
+      </view>
+    </view>
+
+    <view wx:if="{{platform.autoBonus}}" class="note" style="margin-top:16rpx">
+      ⚡ {{platform.autoBonus.label}}{{pro ? '' : '（专业版自动计入）'}}
+    </view>
+    <view wx:if="{{platform.bonusCapNote}}" class="note" style="margin-top:8rpx">
+      📌 {{platform.bonusCapNote}}
+    </view>
+  </view>
+
+  <!-- 成本假设 -->
+  <view class="card">
+    <view class="card-title">💸 成本假设<text class="sub">单位：万元</text></view>
+    <view class="cost-grid">
+      <view class="cost-item">
+        <label>制作成本</label>
+        <view class="cbox"><input type="digit" value="{{costText.prod}}" data-field="prod" bindinput="onCostInput"/><text class="unit">万</text></view>
+      </view>
+      <view class="cost-item">
+        <label>投流成本</label>
+        <view class="cbox"><input type="digit" value="{{costText.traffic}}" data-field="traffic" bindinput="onCostInput"/><text class="unit">万</text></view>
+      </view>
+      <view class="cost-item">
+        <label>人力成本</label>
+        <view class="cbox"><input type="digit" value="{{costText.labor}}" data-field="labor" bindinput="onCostInput"/><text class="unit">万</text></view>
+      </view>
+      <view class="cost-item">
+        <label>算力/AI 成本</label>
+        <view class="cbox"><input type="digit" value="{{costText.ai}}" data-field="ai" bindinput="onCostInput"/><text class="unit">万</text></view>
+      </view>
+    </view>
+    <view class="note">竖屏短剧常见结构：制作 30-60 万 + 投流 50-100 万（投流常占总成本一半以上）</view>
+  </view>
+
+  <!-- 测算结果 -->
+  <view class="result-card">
+    <view class="rlabel">预计分账总收入（含激励）</view>
+    <view class="rnum">{{result.totalText}}</view>
+    <view class="bonus-line" wx:if="{{result.bonusVisible}}">{{result.bonusText}}</view>
+    <view class="rgrid">
+      <view class="cell"><view class="k">总成本</view><view class="v">{{result.costText}}</view></view>
+      <view class="cell"><view class="k">利润</view><view class="v" style="color:{{result.profitColor}}">{{result.profitText}}</view></view>
+      <view class="cell"><view class="k">投入产出比</view><view class="v">{{result.roiText}}</view></view>
+    </view>
+    <view style="margin-top:28rpx">
+      <view class="rlabel" style="margin-bottom:4rpx">🎯 回本线</view>
+      <view class="be-info"><text>回本需播放</text><text>{{result.beViewsText}}</text></view>
+      <view class="be-bar"><view class="fill {{result.beOver ? 'over' : ''}}" style="width:{{result.beWidth}}"></view></view>
+      <view class="be-info"><text>{{result.beCoverText}}</text><text>{{result.bePerText}}</text></view>
+    </view>
+
+    <!-- 激励视频解锁（免费用户看广告获得单次精确计算） -->
+    <view wx:if="{{!pro}}" class="ad-unlock" bindtap="onAdUnlockTap">
+      <text wx:if="{{!tempPro}}">📺 看视频解锁本次精确计算（免费）</text>
+      <text wx:else>✅ 本次已解锁精确计算 · 重新进入后失效</text>
+    </view>
+  </view>
+
+  <!-- 多平台对比 -->
+  <view class="card">
+    <view class="card-title">⚖️ 多平台对比<text class="sub">同参数下各平台分账收入</text></view>
+    <view class="cmp-row {{c.cur ? 'cur' : ''}}" wx:for="{{compare}}" wx:key="id">
+      <text class="cname">{{c.name}}</text>
+      <view class="cbarwrap"><view class="cbar" style="width:{{c.width}};background:{{c.color}}"></view></view>
+      <view class="cval">
+        <text class="cb">{{c.totalText}}</text>
+        <text class="cs">利润 {{c.profitText}}</text>
+      </view>
+    </view>
+    <view class="note">按各平台默认单价与分成比例估算；实际收益取决于内容质量、投流效率与当期规则。</view>
+  </view>
+
+  <!-- 保存方案 -->
+  <button class="btn-ghost" bindtap="onSaveTap">💾 保存当前方案</button>
+
+  <view class="card" wx:if="{{saved.length > 0}}" style="margin-top:24rpx">
+    <view class="card-title">📌 已保存方案<text class="sub">{{pro ? '不限量' : '免费版上限 2 个'}}</text></view>
+    <view class="saved-item" wx:for="{{saved}}" wx:key="id">
+      <view class="sleft">
+        <view class="sname">{{item.name}}</view>
+        <view class="smeta">{{item.meta}}</view>
+      </view>
+      <view class="sprofit" style="color:{{item.profitColor}}">{{item.profitText}}</view>
+    </view>
+  </view>
+
+  <!-- 行业基准 -->
+  <view class="card">
+    <view class="card-title">📊 行业基准<text class="sub">期望值管理</text></view>
+    <view class="bench-grid">
+      <view class="bcell" wx:for="{{benchmarks}}" wx:key="l">
+        <view class="bv">{{item.v}}</view>
+        <view class="bl">{{item.l}}</view>
+        <view class="bn">{{item.n}}</view>
+      </view>
+    </view>
+    <view class="note">短剧是概率游戏：2026 上半年新剧破亿率仅 0.47%。先算回本线，再开机。</view>
+  </view>
+
+</view>

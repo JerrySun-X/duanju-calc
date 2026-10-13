@@ -1,0 +1,9 @@
+{
+  "name": "sendPolicyNotify",
+  "version": "1.0.0",
+  "description": "政策更新推送：管理员更新政策后手动触发，向已订阅用户发送订阅消息",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~0.6.1"
+  }
+}

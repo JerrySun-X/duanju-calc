@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>短剧分账计算器 · 小程序高保真原型</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --green: #07C160;
+    --green-dark: #06AD56;
+    --red: #F54A45;
+    --orange: #FF7A00;
+    --gray: #8A8F99;
+    --text: #17181A;
+    --text2: #575D66;
+    --text3: #8A8F99;
+    --bg: #F6F7F9;
+    --card: #FFFFFF;
+    --line: #ECEEF1;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+    background: #E9EDF2;
+    background-image: radial-gradient(circle at 20% 10%, #fdfefe 0%, transparent 40%), radial-gradient(circle at 85% 80%, #eef3ee 0%, transparent 45%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 36px;
+    padding: 32px 20px 60px;
+    flex-wrap: wrap;
+  }
+  /* ============ 手机外壳 ============ */
+  .phone {
+    width: 390px;
+    height: 800px;
+    background: #101418;
+    border-radius: 52px;
+    padding: 11px;
+    box-shadow: 0 24px 70px rgba(20, 30, 40, .28), 0 4px 14px rgba(20, 30, 40, .18);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    border-radius: 42px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .statusbar {
+    height: 40px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 26px 0 30px;
+    font-size: 14px; font-weight: 600;
+    background: var(--bg);
+  }
+  .statusbar .sicons { display: flex; gap: 5px; align-items: center; font-size: 12px; }
+  .navbar {
+    flex-shrink: 0;
+    background: var(--bg);
+    padding: 6px 16px 10px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .navbar h1 { font-size: 20px; font-weight: 700; }
+  .navbar .upd { font-size: 11px; color: var(--text3); }
+  .content { flex: 1; overflow-y: auto; padding: 4px 14px 18px; scrollbar-width: none; }
+  .content::-webkit-scrollbar { display: none; }
+  .page { display: none; animation: fadeIn .25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .tabbar {
+    flex-shrink: 0;
+    display: flex; background: #fff; border-top: 1px solid var(--line);
+    padding: 6px 8px 18px;
+  }
+  .tabbar button {
+    flex: 1; border: none; background: none; font-size: 11px; color: var(--text3);
+    display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;
+    font-family: inherit;
+  }
+  .tabbar button .ticon { font-size: 21px; line-height: 1; filter: grayscale(1); opacity: .55; transition: all .2s; }
+  .tabbar button.on { color: var(--green); font-weight: 600; }
+  .tabbar button.on .ticon { filter: none; opacity: 1; }
+
+  /* ============ 通用组件 ============ */
+  .card {
+    background: var(--card); border-radius: 14px; padding: 14px;
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(20,30,40,.05);
+  }
+  .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .card h3 .sub { font-size: 11px; color: var(--text3); font-weight: 400; }
+  .pro-tag {
+    font-size: 10px; background: linear-gradient(135deg, #FFD86B, #F5A623); color: #6b4a00;
+    padding: 1px 7px; border-radius: 20px; font-weight: 700;
+  }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0; border: 1.5px solid var(--line); background: #fff; color: var(--text2);
+    border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+    transition: all .15s; font-family: inherit;
+  }
+  .chip.on { border-color: var(--green); color: var(--green); font-weight: 700; background: #F0FBF4; }
+
+  .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .row label { font-size: 13px; color: var(--text2); }
+  .row .val { font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .row .val em { font-style: normal; font-size: 11px; color: var(--text3); font-weight: 400; margin-left: 2px; }
+
+  input[type="range"] { width: 100%; accent-color: var(--green); height: 26px; cursor: pointer; }
+  .note { font-size: 11px; color: var(--text3); line-height: 1.6; margin-top: 2px; }
+
+  .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cost-item { background: #FAFBFC; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .cost-item label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 4px; }
+  .cost-item .cbox { display: flex; align-items: center; gap: 6px; }
+  .cost-item input {
+    width: 100%; border: none; background: none; font-size: 16px; font-weight: 700;
+    font-family: inherit; outline: none; font-variant-numeric: tabular-nums;
+  }
+  .cost-item .unit { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+
+  .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  .switch-row:last-child { border-bottom: none; }
+  .switch-row .sinfo { flex: 1; }
+  .switch-row .sinfo b { font-size: 13px; font-weight: 600; display: block; }
+  .switch-row .sinfo span { font-size: 11px; color: var(--text3); }
+  .sw {
+    width: 46px; height: 27px; border-radius: 20px; background: #E3E6EA; position: relative;
+    cursor: pointer; transition: background .2s; flex-shrink: 0; border: none;
+  }
+  .sw::after {
+    content: ""; position: absolute; width: 23px; height: 23px; border-radius: 50%;
+    background: #fff; top: 2px; left: 2px; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .sw.on { background: var(--green); }
+  .sw.on::after { left: 21px; }
+  .sw.locked { background: #F0E6CC; cursor: pointer; }
+  .sw.locked::after { left: 2px; background: #F5C542; }
+
+  .radio-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .radio-pill {
+    flex: 1; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 6px;
+    text-align: center; cursor: pointer; font-size: 12px; color: var(--text2); background: #fff;
+    font-family: inherit; transition: all .15s;
+  }
+  .radio-pill b { display: block; font-size: 13px; }
+  .radio-pill span { font-size: 10px; color: var(--text3); }
+  .radio-pill.on { border-color: var(--green); background: #F0FBF4; color: var(--green); }
+  .radio-pill.on span { color: var(--green); }
+
+  /* 结果卡 */
+  .result-card { background: linear-gradient(160deg, #0E1A12 0%, #12261A 55%, #0C1F2E 100%); color: #fff; border-radius: 16px; padding: 18px 16px; margin-bottom: 12px; }
+  .result-card .rlabel { font-size: 12px; color: rgba(255,255,255,.65); }
+  .result-card .rnum { font-size: 34px; font-weight: 800; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .result-card .rgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .result-card .rgrid .cell { background: rgba(255,255,255,.08); border-radius: 10px; padding: 8px 10px; }
+  .result-card .rgrid .cell .k { font-size: 10px; color: rgba(255,255,255,.6); }
+  .result-card .rgrid .cell .v { font-size: 15px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .result-card .bonus-line { font-size: 12px; color: #FFD86B; margin-top: 6px; }
+
+  .be-bar { height: 10px; background: #EFF1F4; border-radius: 6px; overflow: hidden; margin: 8px 0 6px; }
+  .be-bar .fill { height: 100%; background: linear-gradient(90deg, #07C160, #34D399); border-radius: 6px; transition: width .3s; }
+  .be-bar .fill.over { background: linear-gradient(90deg, #F54A45, #FF7A45); }
+  .be-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+  .be-info b { font-variant-numeric: tabular-nums; }
+
+  /* 对比图 */
+  .cmp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .cmp-row .cname { width: 62px; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+  .cmp-row .cbarwrap { flex: 1; background: #F3F4F6; border-radius: 6px; height: 22px; position: relative; overflow: hidden; }
+  .cmp-row .cbar { height: 100%; border-radius: 6px; transition: width .4s ease; min-width: 2px; }
+  .cmp-row .cval { width: 86px; font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .cmp-row .cval b { display: block; font-size: 12px; }
+  .cmp-row .cval span { color: var(--text3); }
+  .cmp-row.cur .cname { color: var(--green); font-weight: 700; }
+  .cmp-row.cur .cbarwrap { outline: 2px solid rgba(7,193,96,.4); }
+
+  .lockwrap { position: relative; }
+  .lockwrap .lockmask {
+    position: absolute; inset: 0; background: rgba(255,255,255,.72); backdrop-filter: blur(3px);
+    border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; z-index: 5;
+  }
+  .lockmask .lk-icon { font-size: 26px; }
+  .lockmask .lk-t { font-size: 13px; font-weight: 700; color: var(--text); }
+  .lockmask .lk-btn {
+    background: linear-gradient(135deg, #1A1A1A, #3A3A3A); color: #FFD86B; border: none;
+    font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 20px; cursor: pointer; font-family: inherit;
+  }
+
+  .btn-primary {
+    width: 100%; background: var(--green); color: #fff; border: none; border-radius: 12px;
+    padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .btn-primary:active { background: var(--green-dark); }
+  .btn-ghost {
+    width: 100%; background: #fff; color: var(--text2); border: 1px solid var(--line);
+    border-radius: 12px; padding: 11px; font-size: 13px; cursor: pointer; font-family: inherit; margin-top: 8px;
+  }
+
+  /* 情报页 */
+  .impact { font-size: 10px; padding: 1px 7px; border-radius: 4px; font-weight: 700; flex-shrink: 0; }
+  .impact.lihao { color: #F54A45; background: #FEF0EF; }
+  .impact.zhuyi { color: #FF7A00; background: #FFF5E8; }
+  .impact.neutral { color: #8A8F99; background: #F3F4F6; }
+  .news-item { background: #fff; border-radius: 14px; padding: 13px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(20,30,40,.05); }
+  .news-item .nhead { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .news-item .ndate { font-size: 11px; color: var(--text3); font-variant-numeric: tabular-nums; }
+  .news-item .nplat { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 4px; background: #F0FBF4; color: var(--green); }
+  .news-item h4 { font-size: 14px; line-height: 1.45; margin-bottom: 5px; }
+  .news-item .nsum { font-size: 12px; color: var(--text2); line-height: 1.65; }
+  .news-item .nfoot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .news-item .nsrc { font-size: 11px; color: var(--text3); }
+  .news-item a { font-size: 11px; color: var(--green); text-decoration: none; }
+
+  .banner-pro {
+    background: linear-gradient(135deg, #1A1A1A, #2E2A1E); color: #FFD86B; border-radius: 14px;
+    padding: 13px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  .banner-pro .bicon { font-size: 24px; }
+  .banner-pro b { font-size: 13px; display: block; color: #fff; }
+  .banner-pro span { font-size: 11px; color: rgba(255,255,255,.6); }
+
+  .bench-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bench-grid .bcell { background: #FAFBFC; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; }
+  .bench-grid .bcell .bv { font-size: 16px; font-weight: 800; color: var(--text); }
+  .bench-grid .bcell .bl { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .bench-grid .bcell .bn { font-size: 10px; color: var(--text3); margin-top: 2px; line-height: 1.5; }
+
+  /* 会员页 */
+  .pro-hero { text-align: center; padding: 18px 0 8px; }
+  .pro-hero .crown { font-size: 42px; }
+  .pro-hero h2 { font-size: 20px; margin: 6px 0 4px; }
+  .pro-hero p { font-size: 12px; color: var(--text3); }
+  .price-cards { display: flex; gap: 10px; margin: 14px 0; }
+  .price-card {
+    flex: 1; border: 2px solid var(--line); border-radius: 14px; padding: 14px 10px; text-align: center;
+    cursor: pointer; position: relative; background: #fff; transition: all .15s;
+  }
+  .price-card.on { border-color: #F5A623; background: #FFFDF5; }
+  .price-card .pvip { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: #F54A45; color: #fff; font-size: 10px; padding: 1px 8px; border-radius: 8px; white-space: nowrap; }
+  .price-card .pp { font-size: 24px; font-weight: 800; }
+  .price-card .pp small { font-size: 12px; font-weight: 400; }
+  .price-card .pd { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .price-card .psave { font-size: 10px; color: #F54A45; margin-top: 3px; font-weight: 700; }
+  .feat-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .feat-table th, .feat-table td { padding: 9px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+  .feat-table th { color: var(--text3); font-weight: 400; font-size: 11px; }
+  .feat-table td:first-child, .feat-table th:first-child { text-align: left; color: var(--text2); }
+  .feat-table .yes { color: var(--green); font-weight: 700; }
+  .feat-table .no { color: #D5D8DD; }
+  .faq { font-size: 11px; color: var(--text3); line-height: 1.8; margin-top: 10px; }
+  .faq b { color: var(--text2); }
+
+  /* 保存的方案 */
+  .saved-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 12px; }
+  .saved-item:last-child { border: none; }
+  .saved-item .sname { font-weight: 600; }
+  .saved-item .smeta { color: var(--text3); font-size: 11px; margin-top: 2px; }
+  .saved-item .sprofit { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* toast */
+  .toast {
+    position: absolute; left: 50%; bottom: 110px; transform: translateX(-50%) translateY(20px);
+    background: rgba(0,0,0,.78); color: #fff; font-size: 13px; padding: 10px 18px; border-radius: 10px;
+    opacity: 0; transition: all .3s; z-index: 99; pointer-events: none; max-width: 82%; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ============ 侧栏说明 ============ */
+  .sidepanel {
+    width: 430px; flex-shrink: 0; padding-top: 8px;
+  }
+  .sidepanel .sp-card { background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 2px 10px rgba(20,30,40,.06); }
+  .sidepanel h2 { font-size: 19px; margin-bottom: 4px; }
+  .sidepanel .sp-sub { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+  .sidepanel h4 { font-size: 13px; margin: 14px 0 8px; color: var(--green); }
+  .sidepanel ul { padding-left: 18px; font-size: 12.5px; color: var(--text2); line-height: 1.9; }
+  .sidepanel ul b { color: var(--text); }
+  .sidepanel .sp-foot { font-size: 11px; color: var(--text3); margin-top: 16px; line-height: 1.7; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .sp-badge { display: inline-block; background: #F0FBF4; color: var(--green); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 12px; margin-bottom: 10px; }
+
+  @media (max-width: 940px) {
+    body { gap: 20px; padding: 16px 10px 40px; }
+    .sidepanel { width: 100%; max-width: 430px; }
+    .phone { transform: scale(.96); transform-origin: top center; margin-bottom: -30px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 手机原型 ================= -->
+<div class="phone">
+  <div class="screen">
+    <div class="statusbar">
+      <span id="clock">9:41</span>
+      <span class="sicons">📶 🛜 🔋</span>
+    </div>
+    <div class="navbar">
+      <h1 id="navTitle">短剧分账计算器</h1>
+      <span class="upd">政策更新至 10-13</span>
+    </div>
+
+    <div class="content" id="content">
+
+      <!-- ========== 页面1：计算器 ========== -->
+      <div class="page active" id="page-calc">
+        <div class="chips" id="platformChips" style="margin-bottom:12px"></div>
+
+        <div class="card" id="platformCard">
+          <h3>🎬 <span id="pName">—</span><span class="sub" id="pMode"></span></h3>
+          <div class="note" id="pSummary" style="margin-bottom:8px"></div>
+          <div class="note" id="pPriceNote"></div>
+        </div>
+
+        <div class="card">
+          <h3>📈 播放假设</h3>
+          <div class="row"><label>总播放量</label><span class="val" id="viewsVal">500 <em>万次</em></span></div>
+          <input type="range" id="viewsRange" min="10" max="10000" step="10" value="500">
+          <div class="row" style="margin-top:8px"><label>有效播放率</label><span class="val" id="validVal">70%</span></div>
+          <input type="range" id="validRange" min="30" max="100" step="1" value="70">
+          <div class="note">有效播放率 = 产生广告曝光/付费的有效观看占比，行业常见 60%-80%</div>
+
+          <div id="iaaInputs">
+            <div class="row" style="margin-top:10px"><label>单价（元/千次有效播放）</label><span class="val" id="priceVal">8.0</span></div>
+            <input type="range" id="priceRange" min="3" max="15" step="0.5" value="8">
+          </div>
+          <div id="iapInputs" style="display:none">
+            <div class="row" style="margin-top:10px"><label>付费率</label><span class="val" id="payRateVal">5%</span></div>
+            <input type="range" id="payRateRange" min="1" max="15" step="0.5" value="5">
+            <div class="row" style="margin-top:8px"><label>客单价</label><span class="val" id="arpuVal">30 <em>元</em></span></div>
+            <input type="range" id="arpuRange" min="5" max="100" step="1" value="30">
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🤝 分成与激励 <span class="sub" id="shareNote"></span></h3>
+          <div class="radio-row" id="shareModeRow" style="display:none"></div>
+          <div class="row"><label>分成比例</label><span class="val" id="shareVal">70%</span></div>
+          <input type="range" id="shareRange" min="50" max="100" step="1" value="70">
+          <div class="note" id="shareHint"></div>
+          <div id="toggleBox" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card">
+          <h3>💸 成本假设 <span class="sub">单位：万元</span></h3>
+          <div class="cost-grid">
+            <div class="cost-item"><label>制作成本</label><div class="cbox"><input type="number" id="costProd" value="40" min="0"><span class="unit">万</span></div></div>
+            <div class="cost-item"><label>投流成本</label><div class="cbox"><input type="number" id="costTraffic" value="60" min="0"><span class="unit">万</span></div></div>
+            <div class="cost-item"><label>人力成本</label><div class="cbox"><input type="number" id="costLabor" value="8" min="0"><span class="unit">万</span></div></div>
+            <div class="cost-item"><label>算力/AI 成本</label><div class="cbox"><input type="number" id="costAI" value="1.5" min="0"><span class="unit">万</span></div></div>
+          </div>
+          <div class="note">竖屏短剧常见结构：制作 30-60 万 + 投流 50-100 万（投流常占总成本一半以上）</div>
+        </div>
+
+        <div class="result-card">
+          <div class="rlabel">预计分账总收入（含激励）</div>
+          <div class="rnum" id="resTotal">¥0</div>
+          <div class="bonus-line" id="resBonus" style="display:none"></div>
+          <div class="rgrid">
+            <div class="cell"><div class="k">总成本</div><div class="v" id="resCost">¥0</div></div>
+            <div class="cell"><div class="k">利润</div><div class="v" id="resProfit">¥0</div></div>
+            <div class="cell"><div class="k">投入产出比</div><div class="v" id="resRoi">—</div></div>
+          </div>
+          <div style="margin-top:14px">
+            <div class="rlabel" style="margin-bottom:2px">🎯 回本线</div>
+            <div class="be-info"><span>回本需播放</span><b id="beViews">—</b></div>
+            <div class="be-bar"><div class="fill" id="beFill" style="width:0%"></div></div>
+            <div class="be-info"><span id="beCover">覆盖率 0%</span><span id="bePer">—</span></div>
+          </div>
+        </div>
+
+        <div class="card lockwrap" id="cmpCard">
+          <h3>⚖️ 多平台对比 <span class="sub">同参数下各平台分账收入</span></h3>
+          <div id="cmpList"></div>
+          <div class="note">按各平台默认单价与分成比例估算；实际收益取决于内容质量、投流效率与当期规则。</div>
+        </div>
+
+        <button class="btn-ghost" id="saveBtn">💾 保存当前方案</button>
+        <div id="savedList" style="margin-top:10px"></div>
+
+        <div class="card">
+          <h3>📊 行业基准 <span class="sub">期望值管理</span></h3>
+          <div class="bench-grid" id="benchGrid"></div>
+          <div class="note" style="margin-top:8px">短剧是概率游戏：2026 上半年新剧破亿率仅 0.47%。先算回本线，再开机。</div>
+        </div>
+      </div>
+
+      <!-- ========== 页面2：政策情报 ========== -->
+      <div class="page" id="page-news">
+        <div class="banner-pro" id="newsBanner">
+          <span class="bicon">🔔</span>
+          <div style="flex:1">
+            <b>开启政策变动提醒</b>
+            <span>平台分账规则更新时，微信服务消息第一时间推送</span>
+          </div>
+          <span style="font-size:18px">›</span>
+        </div>
+        <div class="chips" id="newsFilter" style="margin-bottom:12px"></div>
+        <div id="newsList"></div>
+        <div class="note" style="text-align:center; padding:6px 0 4px">信息来源为各平台官方公告与权威媒体报道<br>政策以平台当期官方规则为准</div>
+      </div>
+
+      <!-- ========== 页面3：会员 ========== -->
+      <div class="page" id="page-pro">
+        <div class="pro-hero">
+          <div class="crown" id="proCrown">👑</div>
+          <h2 id="proTitle">短剧分账专业版</h2>
+          <p id="proSub">精确激励模型 · 政策变动提醒 · 报告导出</p>
+        </div>
+
+        <div id="proBuy" >
+          <div class="price-cards">
+            <div class="price-card" data-plan="month">
+              <div class="pp">¥9.9<small>/月</small></div>
+              <div class="pd">连续包月</div>
+              <div class="psave">可随时取消</div>
+            </div>
+            <div class="price-card on" data-plan="year">
+              <div class="pvip">省 ¥19.8</div>
+              <div class="pp">¥99<small>/年</small></div>
+              <div class="pd">折合 ¥8.25/月</div>
+              <div class="psave">推荐 · 日均不到 3 毛钱</div>
+            </div>
+          </div>
+          <button class="btn-primary" id="buyBtn">立即开通专业版</button>
+          <div class="note" style="text-align:center; margin-top:8px">虚拟商品，开通后不支持退款 · 模拟支付演示</div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3>免费版 vs 专业版</h3>
+          <table class="feat-table">
+            <tr><th>功能</th><th>免费版</th><th>专业版</th></tr>
+            <tr><td>基础分账计算</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>回本线测算</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>多平台对比</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>阶梯激励精确计算</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>平台参数自定义</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>方案保存 / 对比导出</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>政策变动微信提醒</td><td class="no">—</td><td class="yes">✓</td></tr>
+          </table>
+          <div class="faq">
+            <b>Q：政策数据多久更新？</b>平台政策变动后 48 小时内更新，重大激励活动当日跟进。<br>
+            <b>Q：计算准吗？</b>单价与分成比例来自平台公开规则与行业估算，可在专业版中按你的实际合同自定义。<br>
+            <b>Q：支持开发票吗？</b>年卡用户支持开具电子发票。
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tabbar">
+      <button class="on" data-page="calc"><span class="ticon">🧮</span>计算器</button>
+      <button data-page="news"><span class="ticon">📡</span>政策情报</button>
+      <button data-page="pro"><span class="ticon">👑</span>会员</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<!-- ================= 侧栏：调研结论 ================= -->
+<div class="sidepanel">
+  <div class="sp-card">
+    <div class="sp-badge">高保真交互原型 · 可真实计算</div>
+    <h2>短剧分账计算器 + 平台政策情报站</h2>
+    <div class="sp-sub">微信小程序产品原型 ｜ 数据更新至 2026-10-13</div>
+
+    <h4>📌 调研结论（为什么是现在）</h4>
+    <ul>
+      <li><b>微信绿泡泡短剧 10-16 起 Q4 激励</b>：IAA 小程序人均≥5 分钟且托管，总激励 <b>70%</b>（现金 60%+广告金 10%）；联合发行优质新剧人均≥10 分钟，激励最高 <b>100%</b>——小程序分账正值窗口期。</li>
+      <li><b>五大平台全部加码</b>：红果 2026 内容投入 +40%（分成 50%-70%）；爱奇艺独家首发授权≥5 年享 <b>100% 分账</b>；腾讯视频纯分账超 100 万部分 <b>+15%</b>；优酷 EPI 奖金上不封顶；快手 8 亿分账 + 激励系数最高 <b>50%</b>。</li>
+      <li><b>规则普遍阶梯化、系列化、长尾化</b>（腾讯超千万分账期延至 3 年、爱奇艺多集短片 80/100/120% 阶梯），手工算不清，工具是刚需。</li>
+      <li><b>回本线是第一痛点</b>：2026 上半年新剧破亿率仅 <b>0.47%</b>、破千万率 5.8%，老剧占抖音端原生播放 70%+——开机前先算账的人才能活下来。</li>
+    </ul>
+
+    <h4>🖥 原型怎么玩</h4>
+    <ul>
+      <li>底部三个 Tab：<b>计算器 / 政策情报 / 会员</b>。计算器可切换 7 个平台，拖动滑块实时测算分账收入、回本线、利润。</li>
+      <li>阶梯激励（红果稀缺题材 +20%、腾讯超 100 万 +15%、快手 50% 系数等）为<b>专业版功能</b>——到「会员」页点「立即开通」即可模拟解锁。</li>
+      <li>「政策情报」页收录 12 条带日期、来源的政策动态，可按平台筛选。</li>
+    </ul>
+
+    <h4>💰 商业化设计</h4>
+    <ul>
+      <li>基础计算 + 回本线 + 多平台对比<b>免费</b>（流量钩子）；阶梯激励精确模型、方案保存导出、政策变动微信提醒 <b>¥9.9/月 或 ¥99/年</b>。</li>
+      <li>开发极轻：核心资产是 <b>platform-policies.json</b> 结构化政策库与每周更新流程，本原型已附带该数据文件。</li>
+    </ul>
+
+    <div class="sp-foot">免责声明：原型中单价、分成比例为公开政策整理与行业估算参考值，实际以各平台当期官方规则及签约合同为准，不构成投资建议。</div>
+  </div>
+</div>
+
+<script>
+/* ==================== 数据 ==================== */
+const PLATFORMS = [
+  { id:'hongguo', name:'红果短剧', mode:'IAA', modeLabel:'IAA 广告分账', color:'#FF4D4F',
+    price:7.5, priceRange:[2,15], priceNote:'万次有效播放约 5-10 元（2026 参考区间）',
+    share:60, shareRange:[50,70], shareNote:'官方发行扣运营成本后 50%-70%，独家取上限',
+    toggles:[
+      {id:'exclusive', label:'独家发行', desc:'分成比例取上限 70%', type:'share70'},
+      {id:'rare', label:'稀缺题材 +20%', desc:'历史/民国/悬疑等题材额外 20% 分账激励', type:'bonus20'}
+    ],
+    summary:'免费+IAA 基本盘；2026 内容投入预算 +40%；分账透明化 2026Q2 开放；万象计划二期/成长计划单部保底最高 200 万。' },
+  { id:'douyin', name:'抖音端原生', mode:'IAP', modeLabel:'IAP 付费点播', color:'#161823',
+    payRate:5, payRateRange:[1,15], arpu:30, arpuRange:[5,100],
+    priceNote:'按付费率 × 客单价估算平台流水',
+    share:80, shareRange:[60,80], shareNote:'自然流量付费类真人短剧分成 70%→80%（2025-05-11 施行）',
+    toggles:[{id:'sequel', label:'系列续作 +20%', desc:'同 IP 续作最高 20% 激励', type:'bonus20'}],
+    summary:'投流分发为主；45 亿扶持（30 亿保底，达标剧 30 万/部）；单部头部激励最高 150 万；老剧占端原生播放 70%+，新剧突围难。' },
+  { id:'kuaishou', name:'快手端原生', mode:'IAA', modeLabel:'IAA 广告分账', color:'#FF7A00',
+    price:6, priceRange:[2,12], priceNote:'端原生分账以当期规则为准（估算值）',
+    share:90, shareRange:[80,100], shareNote:'剧集直接在快手 App 上架分账，播放/完播/互动直接计量',
+    toggles:[
+      {id:'duration', label:'时长达标 +15%', desc:'单剧时长达标激励加权', type:'coef15'},
+      {id:'finish', label:'完播达标 +15%', desc:'单剧完播率达标激励加权', type:'coef15'},
+      {id:'series', label:'系列续季 +20%', desc:'上一季发布 2 个月内上线新一季', type:'coef20'}
+    ],
+    bonusCap:200000, bonusCapNote:'激励系数最高 50%，单部激励封顶 20 万元',
+    summary:'男频+下沉错位竞争；2026 投入 8 亿分账+2 亿孵化现金+10 亿流量；10.1-11.30 好剧·系列剧激励；8 月原生 TOP10 版权方分账破 2000 万。' },
+  { id:'lpaopao', name:'微信绿泡泡', mode:'IAA', modeLabel:'IAA 小程序（微信官方）', color:'#07C160',
+    price:8, priceRange:[3,15], priceNote:'官方披露：观看时长约为大盘 5 倍、留存约 2.5 倍',
+    share:70, shareRange:[50,100], shareNote:'人均≥5 分钟且托管：总激励 70%（现金 60%+广告金 10%）；非托管 60% 现金',
+    shareModes:[
+      {id:'hosted', label:'IAA 托管', share:70, desc:'现金 60%+广告金 10%'},
+      {id:'unhosted', label:'IAA 非托管', share:60, desc:'60% 现金'},
+      {id:'joint', label:'联合发行', share:100, desc:'优质新剧人均≥10 分钟：激励 100%'}
+    ],
+    toggles:[],
+    summary:'2026-10-16 起 Q4 激励：联合发行优质新剧收入激励 100%（现金 90%+广告金 10%）；需已加入短剧内容合作计划并经腾讯营销/视频号加热投放。' },
+  { id:'iqiyi', name:'爱奇艺', mode:'会员分账', modeLabel:'会员/付费分账', color:'#00BE06',
+    price:15, priceRange:[5,40], priceNote:'按平台收入 × 分成比例，单价为估算值',
+    share:70, shareRange:[70,100], shareNote:'独家首发且授权≥5 年：100%；非独家：70%',
+    toggles:[{id:'aigc', label:'AIGC 补贴 +20%', desc:'2026.4.22-12.31 上线并产生分账的 AIGC 内容', type:'bonus20'}],
+    summary:'真人/AI/漫剧统一收益规则；单部优质短剧最高奖 100 万、厂牌最高 300 万；免费开放文学 IP；多集短片阶梯 80%/100%/120%；2026 预算 +25%。' },
+  { id:'tencent', name:'腾讯视频', mode:'会员分账', modeLabel:'会员分账', color:'#1479F2',
+    price:12, priceRange:[4,30], priceNote:'基础分账 60%-70% + 专项补贴 30%-40%，单价为估算值',
+    share:65, shareRange:[60,70], shareNote:'按播放量/会员拉新结算，基础分成 60%-70%',
+    toggles:[{id:'series', label:'系列化 +10%', desc:'同 IP 系列第 2 部起额外 10%（第 3 部 +15%）', type:'bonus10'}],
+    autoBonus:{label:'纯分账超 100 万部分 +15%', threshold:1000000, rate:0.15},
+    summary:'横屏长中短规则拉通；分账超 1000 万项目分账期延至 1 年、超 2000 万延至 3 年；定向扶持单项目保底≥300 万；2026 扶持资金 12-15 亿。' },
+  { id:'youku', name:'优酷', mode:'会员分账', modeLabel:'EPI+会员分账', color:'#1262E6',
+    price:10, priceRange:[4,30], priceNote:'EPI 机制按播出效果付费，单价为估算值',
+    share:110, shareRange:[100,120], shareNote:'网络故事片：100% 会员收入分成 + 拉新系数最高 20%',
+    toggles:[],
+    summary:'EPI 有效播放指数：上线 90 天生成透明指数，奖金上不封顶（未计入本模型）；2026-08-12 横屏短剧分账焕新：单价/拉新/IP 系列化/合作方激励全维升级。' }
+];
+
+const POLICIES = [
+  { id:'wx-q4', plat:'微信绿泡泡', cat:'微信', date:'2026-10-16', impact:'利好',
+    title:'绿泡泡短剧 Q4 激励：IAA 最高 70%，联合发行最高 100%',
+    sum:'2026-10-16 起微信开放平台联合微信营销推第四季度激励。联合发行优质新剧（人均播放≥10 分钟）收入激励 100%（现金 90%+广告金 10%），普通剧 85%；微短剧 IAA 小程序人均≥5 分钟且托管总激励 70%（现金 60%+广告金 10%），非托管 60% 现金。条件：已加入短剧内容合作计划、经腾讯营销/视频号加热、投放载体为绿泡泡小程序。',
+    src:'微信开放平台 / 今日头条' },
+  { id:'tencent-ads', plat:'腾讯广告', cat:'微信', date:'2026-10', impact:'利好',
+    title:'腾讯广告 IAA 漫剧/AI 短剧扶持：新剧最高 110% 分成',
+    sum:'新剧最高 110% 分成、自营小程序 85%，投放未达预期有测试金赔付兜底。',
+    src:'今日头条' },
+  { id:'ks-oct', plat:'快手', cat:'快手', date:'2026-10-01', impact:'利好',
+    title:'快手「好剧·系列剧激励」：系数最高 50%，单部封顶 20 万',
+    sum:'10.1-11.30：单剧时长达标 +15%、完播率达标 +15%、系列剧第二季在上一季发布 2 个月内上线再 +20%，同时满足系数最高 50%，单部激励封顶 20 万元。背景：2026 年 8 月快手原生 TOP10 版权方分账破 2000 万，环比 +53%。',
+    src:'电影界' },
+  { id:'hg-2026', plat:'红果短剧', cat:'红果', date:'2026-03', impact:'利好',
+    title:'红果 2026：内容投入 +40%，分账透明化 Q2 开放',
+    sum:'2026 年内容投入总预算增幅超 40%；官方发行分成 50%-70%（独家更高）；万象计划二期与短剧成长计划单部保底最高 200 万；历史/民国/悬疑等稀缺题材额外 20% 分账激励；果燃计划编剧单本保底 5-12 万；分账透明化 2026Q2 全面开放，核心主创可平等获取收入数据。',
+    src:'新华网 / 今日头条' },
+  { id:'iqiyi', plat:'爱奇艺', cat:'爱奇艺', date:'2026-08-20', impact:'利好',
+    title:'爱奇艺：独家首发授权≥5 年享 100% 分账',
+    sum:'真人/AI/漫剧统一收益规则；独家首发且授权期超 5 年享 100% 分账，非独家 70%；AIGC 内容（2026.4.22-12.31 上线）额外 20% 补贴；S 级项目播后奖励最高 100 万、年 6 部+厂牌 300 万；免费开放文学 IP；新增多集短片分账（阶梯 80%/100%/120%）；2026 分账预算 +25%。',
+    src:'中国证券网 / 爱奇艺' },
+  { id:'tx-video', plat:'腾讯视频', cat:'腾讯视频', date:'2026-03', impact:'利好',
+    title:'腾讯视频横屏分账升级：超 100 万 +15%，分账期最长 3 年',
+    sum:'长/中/短横屏规则首次拉通；纯分账独播单项目超 100 万部分额外激励 15%；保底+分账无保底上限，500-1000 万部分 +5%、超 1000 万部分 +10%；分账超 1000 万项目分账期延至 1 年、超 2000 万延至 3 年；系列化第 2 部 +10%、第 3 部及以上 +15%；定向扶持单项目保底≥300 万；2026 扶持资金 12-15 亿。',
+    src:'腾讯网 / 流媒体网' },
+  { id:'youku', plat:'优酷', cat:'优酷', date:'2026-08-12', impact:'利好',
+    title:'优酷 EPI 机制：按播出效果付费，奖金上不封顶',
+    sum:'剧集接入 EPI（有效播放指数）评级，上线 90 天内按综合评分/热度/收入生成透明指数，指数越高奖金越高且上不封顶；网络故事片（2026-01-01 起）100% 会员观影收入分成 + 拉新系数最高 20%，总分账可达 120%；横屏短剧分账单价/拉新/IP 系列化/合作方激励全维焕新。',
+    src:'网易 / 腾讯新闻' },
+  { id:'dy-45', plat:'抖音', cat:'抖音', date:'2026-05', impact:'利好',
+    title:'抖音 45 亿扶持：付费分成 70%→80%，单部头部激励 150 万',
+    sum:'全年保底投入 30 亿（2025 年 25 亿 + 2026 新增 5 亿），达标真人短剧 30 万/部保底；自然流量付费类真人短剧分成 70%→80%（2025-05-11 施行）；广告变现分成预算上调，全年新增分账超 10 亿；单部最高 150 万头部激励 + 2 亿专项资金；续作最高 20% 激励。',
+    src:'今日头条' },
+  { id:'hg-trans', plat:'红果短剧', cat:'红果', date:'2026-03', impact:'利好',
+    title:'红果启动分账透明化：主创可查收入数据',
+    sum:'预计 2026Q2 全面开放，编剧/导演/演员等核心主创可平等、便捷获取作品收入数据；推出覆盖作品全生命周期的分账模式，播放/复看/二次传播收益均纳入主创分成。',
+    src:'新华网' },
+  { id:'reg-ai', plat:'监管', cat:'监管', date:'2026', impact:'注意',
+    title:'广电总局：AI 微短剧先审后播，每集标注 AI 标识',
+    sum:'2026 年对 AI 微短剧实行先审后播、每集标注 AI 生成标识、投流素材必须与正片一致；腾讯视频对纯 AI 批量剧削减流量与厂牌扶持，真人实拍 + AI 辅助可享 100% 独家分账与阶梯补贴；纯 AI 漫剧按分类分层审核、周期更长。',
+    src:'今日头条 / 广电总局' },
+  { id:'bench', plat:'行业数据', cat:'行业', date:'2026-07', impact:'注意',
+    title:'DataEye：2026 上半年破亿率仅 0.47%',
+    sum:'全网 22.19 万部作品中播放破亿仅 1055 部（0.47%），破千万超 1.2 万部（5.8%）；抖音端原生老剧播放量占比稳定在 70% 以上，新剧突围越来越难。做期望值管理比做暴富梦重要。',
+    src:'DataEye-ADX' },
+  { id:'settle', plat:'行业动态', cat:'行业', date:'2026-03', impact:'中性',
+    title:'结算基准：按月结算、T+1 数据成行业共识',
+    sum:'腾讯视频/爱奇艺均按月结算，腾讯整体回款周期约 6 个月，播放数据实时可查、分账金额 T+1 呈现；爱奇艺规则调整至少提前 15 天公示，公示前签的合同按老政策执行。',
+    src:'虎嗅 / 影视独舌' }
+];
+
+const BENCHMARKS = [
+  {v:'0.47%', l:'2026H1 新剧破亿率', n:'22.19 万部中仅 1055 部破亿'},
+  {v:'5.8%', l:'2026H1 新剧破千万率', n:'超 1.2 万部破千万'},
+  {v:'5-10 元', l:'红果万次播放收益', n:'2026 年参考区间'},
+  {v:'8-25 元/人', l:'红果拉新佣金', n:'达人分销结算标准'},
+  {v:'约 5 倍', l:'绿泡泡用户时长', n:'留存约 2.5 倍（官方披露）'},
+  {v:'2000 万+', l:'快手原生 TOP10 月分账', n:'2026 年 8 月，环比 +53%'}
+];
+
+/* ==================== 状态 ==================== */
+const LS_KEY = 'duanju_calc_v1';
+let state = {
+  platform: 'lpaopao',
+  views: 500,          // 万次
+  validRate: 70,       // %
+  price: 8,
+  payRate: 5,
+  arpu: 30,
+  share: 70,
+  shareMode: 'hosted',
+  toggles: {},
+  pro: false,
+  plan: 'year',
+  saved: []
+};
+try {
+  const ls = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+  if (ls && typeof ls === 'object') {
+    state.pro = !!ls.pro;
+    state.saved = Array.isArray(ls.saved) ? ls.saved : [];
+    if (ls.platform) state.platform = ls.platform;
+  }
+} catch(e) {}
+
+function persist() {
+  localStorage.setItem(LS_KEY, JSON.stringify({ pro: state.pro, saved: state.saved, platform: state.platform }));
+}
+
+/* ==================== 工具 ==================== */
+const $ = id => document.getElementById(id);
+function fmtMoney(v) {
+  if (!isFinite(v)) return '—';
+  const a = Math.abs(v);
+  if (a >= 1e8) return '¥' + (v/1e8).toFixed(2) + ' 亿';
+  if (a >= 1e4) return '¥' + (v/1e4).toFixed(2) + ' 万';
+  return '¥' + Math.round(v).toLocaleString('zh-CN');
+}
+function fmtMoneyPlain(v) {
+  if (!isFinite(v)) return '—';
+  const a = Math.abs(v);
+  if (a >= 1e4) return (v/1e4).toFixed(1) + '万';
+  return Math.round(v).toLocaleString('zh-CN');
+}
+function fmtViews(w) { // 万次
+  if (w >= 10000) return (w/10000).toFixed(2) + ' 亿次';
+  return w.toFixed(0) + ' 万次';
+}
+function curPlatform() { return PLATFORMS.find(p => p.id === state.platform); }
+function totalCostWan() {
+  return ['costProd','costTraffic','costLabor','costAI'].reduce((s,id) => s + (parseFloat($(id).value) || 0), 0);
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ==================== 核心计算 ==================== */
+function compute(pid, opts = {}) {
+  const p = PLATFORMS.find(x => x.id === pid);
+  const views = opts.views != null ? opts.views : state.views;          // 万
+  const validRate = opts.validRate != null ? opts.validRate : state.validRate;
+  const costWan = opts.costWan != null ? opts.costWan : totalCostWan();
+  const pro = opts.pro != null ? opts.pro : state.pro;
+
+  const validPlays = views * 1e4 * validRate / 100;
+
+  let revPer1000;
+  if (p.mode === 'IAP') {
+    revPer1000 = 1000 * (state.payRate/100) * state.arpu;
+  } else {
+    revPer1000 = opts.price != null ? opts.price : state.price;
+  }
+  const share = opts.share != null ? opts.share : state.share;
+  const base = validPlays / 1000 * revPer1000 * share / 100;
+
+  let bonus = 0, bonusDesc = '';
+  if (pro) {
+    const tg = state.toggles;
+    if (pid === 'hongguo' && tg.rare) { bonus += base * 0.2; bonusDesc = '稀缺题材 +20%'; }
+    if (pid === 'douyin' && tg.sequel) { bonus += base * 0.2; bonusDesc = '系列续作 +20%'; }
+    if (pid === 'kuaishou') {
+      let coef = 0;
+      if (tg.duration) coef += 0.15;
+      if (tg.finish) coef += 0.15;
+      if (tg.series) coef += 0.20;
+      if (coef > 0) {
+        bonus = Math.min(base * coef, p.bonusCap || Infinity);
+        bonusDesc = '激励系数 +' + Math.round(coef*100) + '%' + (base*coef > p.bonusCap ? '（已封顶 20 万）' : '');
+      }
+    }
+    if (pid === 'iqiyi' && tg.aigc) { bonus += base * 0.2; bonusDesc = 'AIGC 补贴 +20%'; }
+    if (pid === 'tencent') {
+      let parts = [];
+      if (p.autoBonus && base > p.autoBonus.threshold) {
+        const b = (base - p.autoBonus.threshold) * p.autoBonus.rate;
+        bonus += b; parts.push('超 100 万 +15%');
+      }
+      if (tg.series) { bonus += base * 0.10; parts.push('系列化 +10%'); }
+      if (parts.length) bonusDesc = parts.join(' · ');
+    }
+  }
+  const total = base + bonus;
+  const cost = costWan * 1e4;
+  const profit = total - cost;
+  const roi = cost > 0 ? total / cost : Infinity;
+  const perPlay = revPer1000/1000 * share/100 * validRate/100;
+  const beViews = perPlay > 0 ? cost / perPlay : Infinity;  // 次
+  return { p, base, bonus, bonusDesc, total, cost, profit, roi, beViews, validPlays };
+}
+
+/* ==================== 渲染：平台选择 ==================== */
+function renderPlatformChips() {
+  const box = $('platformChips');
+  box.innerHTML = '';
+  PLATFORMS.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (p.id === state.platform ? ' on' : '');
+    b.textContent = p.name;
+    b.onclick = () => switchPlatform(p.id);
+    box.appendChild(b);
+  });
+}
+
+function switchPlatform(id) {
+  state.platform = id;
+  const p = curPlatform();
+  state.price = p.price;
+  state.share = p.share;
+  state.shareMode = p.shareModes ? p.shareModes[0].id : null;
+  state.toggles = {};
+  persist();
+  renderAll();
+}
+
+/* ==================== 渲染：计算器 ==================== */
+function renderCalc() {
+  const p = curPlatform();
+  $('pName').textContent = p.name;
+  $('pMode').textContent = ' · ' + p.modeLabel;
+  $('pSummary').textContent = p.summary;
+  $('pPriceNote').textContent = '💡 ' + p.priceNote;
+
+  // 输入区
+  $('iaaInputs').style.display = p.mode === 'IAP' ? 'none' : 'block';
+  $('iapInputs').style.display = p.mode === 'IAP' ? 'block' : 'none';
+  const pr = $('priceRange');
+  pr.min = p.priceRange[0]; pr.max = p.priceRange[1]; pr.step = (p.priceRange[1]-p.priceRange[0] > 20 ? 1 : 0.5);
+  pr.value = state.price; $('priceVal').textContent = state.price.toFixed(1);
+
+  // 分成
+  $('shareNote').textContent = p.shareNote;
+  const sr = $('shareRange');
+  sr.min = p.shareRange[0]; sr.max = p.shareRange[1]; sr.value = state.share;
+  $('shareVal').textContent = state.share + '%';
+  $('shareHint').textContent = '💡 ' + p.shareNote;
+
+  // 分成模式（绿泡泡）
+  const smr = $('shareModeRow');
+  if (p.shareModes) {
+    smr.style.display = 'flex';
+    smr.innerHTML = '';
+    p.shareModes.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'radio-pill' + (state.shareMode === m.id ? ' on' : '');
+      b.innerHTML = '<b>' + m.label + '</b><span>' + m.share + '%</span>';
+      b.onclick = () => {
+        state.shareMode = m.id;
+        state.share = m.share;
+        renderCalc(); renderResult();
+      };
+      smr.appendChild(b);
+    });
+  } else {
+    smr.style.display = 'none';
+  }
+
+  // 激励开关
+  const tb = $('toggleBox');
+  tb.innerHTML = '';
+  p.toggles.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'switch-row';
+    const locked = !state.pro;
+    row.innerHTML = '<div class="sinfo"><b>' + t.label + (locked ? ' <span class="pro-tag">专业版</span>' : '') + '</b><span>' + t.desc + '</span></div>';
+    const sw = document.createElement('button');
+    sw.className = 'sw' + (state.toggles[t.id] ? ' on' : '') + (locked ? ' locked' : '');
+    sw.onclick = () => {
+      if (!state.pro) { toast('阶梯激励为专业版功能，前往「会员」页解锁'); switchTab('pro'); return; }
+      state.toggles[t.id] = !state.toggles[t.id];
+      renderCalc(); renderResult();
+    };
+    row.appendChild(sw);
+    tb.appendChild(row);
+  });
+  if (p.autoBonus) {
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.style.marginTop = '8px';
+    note.innerHTML = state.pro
+      ? '⚡ 已自动计入：' + p.autoBonus.label
+      : '⚡ ' + p.autoBonus.label + '（专业版自动计入）';
+    tb.appendChild(note);
+  }
+  if (p.bonusCapNote) {
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.style.marginTop = '6px';
+    note.textContent = '📌 ' + p.bonusCapNote;
+    tb.appendChild(note);
+  }
+
+  renderResult();
+}
+
+function renderResult() {
+  const r = compute(state.platform);
+  $('resTotal').textContent = fmtMoney(r.total);
+  if (r.bonus > 0) {
+    $('resBonus').style.display = 'block';
+    $('resBonus').textContent = '其中平台激励加成 +' + fmtMoney(r.bonus) + '（' + r.bonusDesc + '）';
+  } else {
+    $('resBonus').style.display = 'none';
+  }
+  $('resCost').textContent = fmtMoney(r.cost);
+  const pf = $('resProfit');
+  pf.textContent = fmtMoney(r.profit);
+  pf.style.color = r.profit >= 0 ? '#FF6B61' : '#7ED77A';  // 中式习惯：盈利红 / 亏损绿
+  $('resRoi').textContent = isFinite(r.roi) ? r.roi.toFixed(2) + ' ×' : '—';
+
+  // 回本线
+  const beWan = r.beViews / 1e4;
+  $('beViews').textContent = isFinite(beWan) ? fmtViews(beWan) : '无需成本';
+  const cover = isFinite(beWan) && beWan > 0 ? Math.min(state.views / beWan * 100, 999) : (r.cost === 0 ? 100 : 0);
+  const fill = $('beFill');
+  fill.style.width = Math.min(cover, 100) + '%';
+  fill.classList.toggle('over', cover >= 100);
+  $('beCover').textContent = r.cost === 0 ? '零成本，播放即盈利' : (cover >= 100 ? '✅ 已超过回本线' : '覆盖率 ' + cover.toFixed(0) + '%');
+  $('bePer').textContent = isFinite(r.roi) && r.roi > 0
+    ? '每万次播放分账 ' + fmtMoneyPlain(r.total / state.views) + ' 元'
+    : '每万次播放分账 —';
+}
+
+function renderCompare() {
+  const box = $('cmpList');
+  box.innerHTML = '';
+  const rows = PLATFORMS.map(p => {
+    const o = { views: state.views, validRate: state.validRate, costWan: totalCostWan(), pro: false };
+    if (p.mode !== 'IAP') o.price = p.price;
+    const r = compute(p.id, o);
+    return { p, r };
+  }).sort((a, b) => b.r.total - a.r.total);
+  const max = Math.max(...rows.map(x => x.r.total), 1);
+  rows.forEach(({ p, r }) => {
+    const div = document.createElement('div');
+    div.className = 'cmp-row' + (p.id === state.platform ? ' cur' : '');
+    div.innerHTML =
+      '<span class="cname">' + p.name + '</span>' +
+      '<div class="cbarwrap"><div class="cbar" style="width:' + (r.total / max * 100).toFixed(1) + '%;background:' + p.color + '"></div></div>' +
+      '<div class="cval"><b>' + fmtMoneyPlain(r.total) + '</b><span>利润 ' + fmtMoneyPlain(r.profit) + '</span></div>';
+    box.appendChild(div);
+  });
+}
+
+function renderSaved() {
+  const box = $('savedList');
+  box.innerHTML = '';
+  if (!state.saved.length) return;
+  const h = document.createElement('div');
+  h.className = 'note';
+  h.style.margin = '4px 0 6px';
+  h.textContent = '已保存 ' + state.saved.length + (state.pro ? ' 个方案' : '/2 个方案（专业版不限量）');
+  box.appendChild(h);
+  state.saved.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'saved-item';
+    div.innerHTML =
+      '<div><div class="sname">' + s.name + '</div><div class="smeta">' + s.meta + '</div></div>' +
+      '<div class="sprofit" style="color:' + (s.profit >= 0 ? '#F54A45' : '#00B42A') + '">' + fmtMoney(s.profit) + '</div>';
+    box.appendChild(div);
+  });
+}
+
+function renderBench() {
+  const box = $('benchGrid');
+  box.innerHTML = '';
+  BENCHMARKS.forEach(b => {
+    const d = document.createElement('div');
+    d.className = 'bcell';
+    d.innerHTML = '<div class="bv">' + b.v + '</div><div class="bl">' + b.l + '</div><div class="bn">' + b.n + '</div>';
+    box.appendChild(d);
+  });
+}
+
+/* ==================== 渲染：情报站 ==================== */
+let newsCat = '全部';
+function renderNewsFilter() {
+  const cats = ['全部', '微信', '红果', '抖音', '快手', '爱奇艺', '腾讯视频', '优酷', '监管', '行业'];
+  const box = $('newsFilter');
+  box.innerHTML = '';
+  cats.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (newsCat === c ? ' on' : '');
+    b.textContent = c;
+    b.onclick = () => { newsCat = c; renderNewsFilter(); renderNews(); };
+    box.appendChild(b);
+  });
+}
+function renderNews() {
+  const box = $('newsList');
+  box.innerHTML = '';
+  POLICIES.filter(n => newsCat === '全部' || n.cat === newsCat).forEach(n => {
+    const d = document.createElement('div');
+    d.className = 'news-item';
+    const impactCls = n.impact === '利好' ? 'lihao' : (n.impact === '注意' ? 'zhuyi' : 'neutral');
+    d.innerHTML =
+      '<div class="nhead"><span class="nplat">' + n.plat + '</span><span class="impact ' + impactCls + '">' + n.impact + '</span><span class="ndate">' + n.date + '</span></div>' +
+      '<h4>' + n.title + '</h4>' +
+      '<div class="nsum">' + n.sum + '</div>' +
+      '<div class="nfoot"><span class="nsrc">来源：' + n.src + '</span></div>';
+    box.appendChild(d);
+  });
+}
+
+/* ==================== 渲染：会员页 ==================== */
+function renderPro() {
+  const buy = $('proBuy');
+  if (state.pro) {
+    buy.innerHTML =
+      '<div style="text-align:center;background:linear-gradient(135deg,#0E1A12,#12261A);border-radius:14px;padding:20px;color:#fff">' +
+      '<div style="font-size:34px">🎉</div>' +
+      '<div style="font-size:16px;font-weight:700;margin:8px 0 4px">专业版已开通（模拟）</div>' +
+      '<div style="font-size:12px;color:rgba(255,255,255,.65)">阶梯激励精确模型 · 方案保存导出 · 政策变动提醒 已解锁</div>' +
+      '<button id="cancelBtn" style="margin-top:14px;background:rgba(255,255,255,.12);color:#fff;border:none;padding:8px 18px;border-radius:16px;font-size:12px;cursor:pointer;font-family:inherit">模拟取消订阅</button></div>';
+    $('cancelBtn').onclick = () => {
+      state.pro = false; persist();
+      renderAll(); toast('已取消专业版（模拟）');
+    };
+  }
+  $('proCrown').textContent = state.pro ? '🎉' : '👑';
+  $('proTitle').textContent = state.pro ? '专业版使用中' : '短剧分账专业版';
+  $('proSub').textContent = state.pro ? '感谢支持，数据每周更新' : '精确激励模型 · 政策变动提醒 · 报告导出';
+}
+
+/* ==================== 交互绑定 ==================== */
+function bindInputs() {
+  $('viewsRange').addEventListener('input', e => {
+    state.views = parseFloat(e.target.value);
+    $('viewsVal').innerHTML = state.views + ' <em>万次</em>';
+    renderResult(); renderCompare();
+  });
+  $('validRange').addEventListener('input', e => {
+    state.validRate = parseFloat(e.target.value);
+    $('validVal').textContent = state.validRate + '%';
+    renderResult(); renderCompare();
+  });
+  $('priceRange').addEventListener('input', e => {
+    state.price = parseFloat(e.target.value);
+    $('priceVal').textContent = state.price.toFixed(1);
+    renderResult();
+  });
+  $('payRateRange').addEventListener('input', e => {
+    state.payRate = parseFloat(e.target.value);
+    $('payRateVal').textContent = state.payRate + '%';
+    renderResult();
+  });
+  $('arpuRange').addEventListener('input', e => {
+    state.arpu = parseFloat(e.target.value);
+    $('arpuVal').innerHTML = state.arpu + ' <em>元</em>';
+    renderResult();
+  });
+  $('shareRange').addEventListener('input', e => {
+    state.share = parseFloat(e.target.value);
+    $('shareVal').textContent = state.share + '%';
+    renderResult();
+  });
+  ['costProd','costTraffic','costLabor','costAI'].forEach(id => {
+    $(id).addEventListener('input', () => { renderResult(); renderCompare(); });
+  });
+
+  $('saveBtn').onclick = () => {
+    const max = state.pro ? 99 : 2;
+    if (state.saved.length >= max) {
+      toast(state.pro ? '保存数量异常' : '免费版最多保存 2 个方案，开通专业版不限量');
+      switchTab('pro'); return;
+    }
+    const r = compute(state.platform);
+    const p = curPlatform();
+    const name = p.name + ' · ' + state.views + '万播放';
+    const meta = '播放 ' + state.views + '万 · 分成 ' + state.share + '% · 成本 ' + totalCostWan() + '万 · 收入 ' + fmtMoney(r.total);
+    state.saved.unshift({ name, meta, profit: r.profit });
+    if (state.saved.length > 6) state.saved.pop();
+    persist(); renderSaved();
+    toast('方案已保存');
+  };
+
+  // 会员页
+  document.querySelectorAll('.price-card').forEach(c => {
+    c.onclick = () => {
+      document.querySelectorAll('.price-card').forEach(x => x.classList.remove('on'));
+      c.classList.add('on');
+      state.plan = c.dataset.plan;
+    };
+  });
+  $('buyBtn').onclick = () => {
+    state.pro = true; persist();
+    renderAll();
+    toast('支付成功（模拟）· 专业版已解锁');
+  };
+
+  // 情报页 banner
+  $('newsBanner').onclick = () => {
+    if (state.pro) { toast('已开启政策提醒（模拟：更新时微信服务消息推送）'); }
+    else { switchTab('pro'); toast('政策变动提醒为专业版功能'); }
+  };
+
+  // Tab 切换
+  document.querySelectorAll('.tabbar button').forEach(b => {
+    b.onclick = () => switchTab(b.dataset.page);
+  });
+}
+
+function switchTab(page) {
+  document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  $('navTitle').textContent = page === 'calc' ? '短剧分账计算器' : (page === 'news' ? '政策情报站' : '会员中心');
+  $('content').scrollTop = 0;
+}
+
+function renderAll() {
+  renderPlatformChips();
+  renderCalc();
+  renderCompare();
+  renderSaved();
+  renderNewsFilter();
+  renderNews();
+  renderPro();
+}
+
+/* ==================== 启动 ==================== */
+function initClock() {
+  const d = new Date();
+  $('clock').textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+(function init() {
+  initClock();
+  setInterval(initClock, 30000);
+  // 恢复平台默认参数
+  const p = curPlatform();
+  state.price = p.price; state.share = p.share;
+  state.shareMode = p.shareModes ? p.shareModes[0].id : null;
+  bindInputs();
+  renderAll();
+})();
+</script>
+</body>
+</html>

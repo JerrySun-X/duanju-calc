@@ -1,0 +1,21 @@
+# 依赖与构建产物
+node_modules/
+miniprogram_npm/
+cloudfunctions/*/node_modules/
+
+# 微信开发者工具本地文件
+project.private.config.json
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 工作区内部数据（非项目交付物）
+.workbuddy/
+
+# 编辑器
+.idea/
+.vscode/
+*.iml
+*.swp

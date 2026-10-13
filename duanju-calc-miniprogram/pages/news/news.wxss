@@ -1,0 +1,81 @@
+/* 政策情报站样式 */
+.page {
+  padding: 24rpx 24rpx 60rpx;
+}
+
+/* 订阅横幅 */
+.banner-pro {
+  background: linear-gradient(135deg, #1A1A1A, #2E2A1E);
+  border-radius: 28rpx;
+  padding: 26rpx 28rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.banner-pro .bicon {
+  font-size: 44rpx;
+}
+.banner-pro .bbody {
+  flex: 1;
+}
+.banner-pro .btitle {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+.banner-pro .bsub {
+  font-size: 21rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4rpx;
+}
+.banner-pro .bmore {
+  font-size: 24rpx;
+  color: #FFD86B;
+  font-weight: 600;
+}
+
+/* 政策卡片 */
+.news-item {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(20, 30, 40, 0.04);
+}
+.news-item .nhead {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+  flex-wrap: wrap;
+}
+.news-item .nplat {
+  font-size: 21rpx;
+  font-weight: 700;
+  padding: 2rpx 16rpx;
+  border-radius: 8rpx;
+  background: #F0FBF4;
+  color: #07C160;
+}
+.news-item .ndate {
+  font-size: 21rpx;
+  color: #8A8F99;
+  margin-left: auto;
+}
+.news-item .ntitle {
+  font-size: 29rpx;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 8rpx;
+}
+.news-item .nsum {
+  font-size: 24rpx;
+  color: #575D66;
+  line-height: 1.7;
+}
+.news-item .nfoot {
+  font-size: 21rpx;
+  color: #8A8F99;
+  margin-top: 12rpx;
+}
