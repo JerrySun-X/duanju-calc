@@ -1,11 +1,12 @@
 /**
- * cloud.js - 微信云开发接入层
+ * cloud.js - 微信云开发接入层（仅 API_MODE = 'cloud' 时使用）
  *
- * 设计原则：云能力全部可选。
- * 未开通云开发 / 游客模式 / 云函数未部署时，所有调用安全降级，
- * 小程序免费功能（计算器、情报站本地数据）完整可用。
+ * server 模式下本模块不被初始化，页面经 utils/api.js 访问自有服务器。
+ * 未开通云开发 / 游客模式 / 云函数未部署时，所有调用安全降级。
  */
-var ENV_ID = '' // 云开发环境 ID：开通环境后填入（控制台可见）；留空则使用默认环境
+var config = require('./config.js')
+
+var ENV_ID = config.CLOUD_ENV_ID // 云开发环境 ID：在 utils/config.js 中配置
 
 var cloudReady = false
 var inited = false

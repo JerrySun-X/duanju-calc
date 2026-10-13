@@ -1,8 +1,9 @@
 const { POLICIES, META } = require('../../utils/data.js')
-const cloud = require('../../utils/cloud.js')
+const config = require('../../utils/config.js')
+const api = require('../../utils/api.js')
 const store = require('../../utils/store.js')
 
-// 云端政策缓存（模块级，切回 Tab 不重复请求）
+// 服务端政策缓存（模块级，切回 Tab 不重复请求）
 var remotePolicies = null
 
 Page({
@@ -11,14 +12,12 @@ Page({
     cat: '全部',
     list: [],
     pro: false,
-    cloudReady: false,
-    dataSource: '本地', // 本地 | 云端
+    dataSource: '本地', // 本地 | 服务端 | 云端
     version: META.version
   },
 
   onShow() {
-    cloud.initCloud()
-    this.setData({ pro: store.isPro(), cloudReady: cloud.isCloudReady() })
+    this.setData({ pro: store.isPro() })
     this.loadPolicies()
   },
 
@@ -37,14 +36,15 @@ Page({
       setTimeout(() => wx.switchTab({ url: '/pages/profile/profile' }), 400)
       return
     }
-    // 需在小程序后台申请订阅消息模板，替换为真实模板 ID
+    // 模板 ID 在 utils/config.js 的 SUBSCRIBE_TEMPLATE_ID 中配置
     wx.requestSubscribeMessage({
-      tmplIds: ['YOUR_SUBSCRIBE_TEMPLATE_ID'],
+      tmplIds: [config.SUBSCRIBE_TEMPLATE_ID],
       success: (res) => {
-        if (res['YOUR_SUBSCRIBE_TEMPLATE_ID'] === 'accept') {
-          // 记录订阅授权到云端，供 sendPolicyNotify 推送使用
-          cloud.callFunctionSafe('subscribe', { action: 'on' })
-          wx.showToast({ title: '已订阅，更新时提醒你', icon: 'success' })
+        if (res[config.SUBSCRIBE_TEMPLATE_ID] === 'accept') {
+          // 记录订阅授权到服务端，供政策更新推送使用
+          api.setSubscribe(true).then(() => {
+            wx.showToast({ title: '已订阅，更新时提醒你', icon: 'success' })
+          })
         } else {
           wx.showToast({ title: '你拒绝了订阅', icon: 'none' })
         }
@@ -53,14 +53,13 @@ Page({
     })
   },
 
-  /** 政策数据：先用本地渲染保证立即可见，再尝试拉取云端（热更新） */
+  /** 政策数据：先用本地渲染保证立即可见，再尝试拉取服务端（热更新） */
   loadPolicies() {
     this.filterNews()
-    if (!cloud.isCloudReady()) return
-    cloud.callFunctionSafe('getPolicies', { type: 'all' }).then((res) => {
+    api.getPolicies('all').then((res) => {
       if (res && res.code === 0 && Array.isArray(res.data) && res.data.length > 0) {
         remotePolicies = res.data
-        this.setData({ dataSource: '云端' })
+        this.setData({ dataSource: api.isServerMode() ? '服务端' : '云端' })
         this.filterNews()
       }
     })

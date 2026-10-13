@@ -1,0 +1,17 @@
+{
+  "name": "duanju-calc-server",
+  "version": "1.0.0",
+  "description": "短剧分账计算器 · 参考服务器（Express + JSON 文件存储，零外部服务依赖）",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "seed": "node seed.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

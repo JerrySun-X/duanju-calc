@@ -2,6 +2,12 @@
 node_modules/
 miniprogram_npm/
 cloudfunctions/*/node_modules/
+server-reference/node_modules/
+
+# 服务器运行时数据（seed 生成，不入库）
+duanju-calc-miniprogram/server-reference/data/
+server-reference/data/
+server-reference/.env
 
 # 微信开发者工具本地文件
 project.private.config.json

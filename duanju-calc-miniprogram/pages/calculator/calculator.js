@@ -2,6 +2,7 @@ const { compute } = require('../../utils/calc.js')
 const { PLATFORMS, BENCHMARKS } = require('../../utils/data.js')
 const F = require('../../utils/format.js')
 const store = require('../../utils/store.js')
+const config = require('../../utils/config.js')
 
 Page({
   data: {
@@ -20,8 +21,8 @@ Page({
     costText: { prod: '40', traffic: '60', labor: '8', ai: '1.5' },
     pro: false,
     tempPro: false,      // 看激励视频获得的单次精确计算权限
-    adEnabled: false,    // 流量主开通并创建广告位后置 true
-    adUnitId: '',        // 激励视频广告位 ID（adunit-xxxx）
+    adEnabled: config.AD_ENABLED,  // 流量主开通并配置广告位后，在 utils/config.js 置 true
+    adUnitId: config.AD_UNIT_ID,   // 激励视频广告位 ID（adunit-xxxx）
     result: null,
     compare: [],
     saved: [],
